@@ -1,8 +1,8 @@
 """
-Enhanced Race Model with Real F1 Data Integration.
+Enhanced Race Model with Real F1 Data Integration and ML Predictions.
 
-This enhanced model uses real F1 performance data to improve the accuracy
-of race predictions and provide more realistic results.
+This enhanced model uses real F1 performance data and machine learning
+to improve the accuracy of race predictions and provide more realistic results.
 
 Updated for 2026 regulations with active aero and new power units.
 """
@@ -14,22 +14,41 @@ from typing import List, Dict, Optional
 import logging
 from models.race_model import RaceSimulator, DriverRaceResult, RaceIncident, format_time
 
+# Import ML predictor
+try:
+    from models.ml_predictor import get_ml_predictor, F1MLPredictor
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
 class EnhancedRaceSimulator(RaceSimulator):
-    """Enhanced race simulator that uses real F1 data for more accurate predictions."""
+    """Enhanced race simulator that uses real F1 data and ML for accurate predictions."""
     
     # Enhanced weighting for 2026 regulations
-    REAL_DATA_WEIGHT = 0.65  # How much to weight real data vs simulation
-    SIMULATION_WEIGHT = 0.35
+    REAL_DATA_WEIGHT = 0.50  # How much to weight real data vs simulation
+    SIMULATION_WEIGHT = 0.25
+    ML_WEIGHT = 0.25  # New: ML prediction weight
     
-    def __init__(self, track, drivers, teams, weather, real_data_enhancer=None):
+    def __init__(self, track, drivers, teams, weather, real_data_enhancer=None, use_ml=True):
         super().__init__(track, drivers, teams, weather)
         self.real_data_enhancer = real_data_enhancer
         self.track_insights = {}
         self._cached_driver_data = None
         self._cached_team_data = None
+        self.use_ml = use_ml and ML_AVAILABLE
+        self.ml_predictor = None
+        self.ml_predictions = None
+        
+        if self.use_ml:
+            try:
+                self.ml_predictor = get_ml_predictor()
+                logger.info("ML predictor initialized")
+            except Exception as e:
+                logger.warning(f"Could not initialize ML predictor: {e}")
+                self.use_ml = False
         
         if real_data_enhancer:
             self.track_insights = real_data_enhancer.get_track_insights(track.name)
@@ -37,6 +56,37 @@ class EnhancedRaceSimulator(RaceSimulator):
             self._cached_driver_data = real_data_enhancer.get_enhanced_driver_data()
             self._cached_team_data = real_data_enhancer.get_enhanced_team_data()
             logger.info(f"Loaded track insights for {track.name}")
+    
+    def get_ml_predictions(self):
+        """Get ML predictions for the race."""
+        if not self.use_ml or not self.ml_predictor:
+            return None
+        
+        if self.ml_predictions is None and self.grid_positions:
+            try:
+                self.ml_predictions = self.ml_predictor.predict(
+                    self.drivers,
+                    self.driver_teams,
+                    self.track,
+                    self.grid_positions,
+                    self.weather
+                )
+                logger.info("ML predictions generated")
+            except Exception as e:
+                logger.warning(f"ML prediction failed: {e}")
+                self.ml_predictions = None
+        
+        return self.ml_predictions
+    
+    def get_ml_summary(self):
+        """Get summary of ML predictions."""
+        if not self.ml_predictions:
+            return None
+        
+        return self.ml_predictor.get_prediction_summary(
+            self.ml_predictions,
+            self.grid_positions
+        )
     
     def calculate_lap_time(self, driver, team, lap_number, weather, tire_degradation=0):
         """Calculate lap time with enhanced real data consideration for 2026."""

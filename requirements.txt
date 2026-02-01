@@ -5,6 +5,9 @@ pandas>=1.3.0
 matplotlib>=3.4.0
 seaborn>=0.11.0
 
+# Machine Learning
+scikit-learn>=1.0.0
+
 # Real F1 data integration
 fastf1>=3.0.0
 
