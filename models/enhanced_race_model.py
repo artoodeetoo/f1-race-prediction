@@ -3,6 +3,8 @@ Enhanced Race Model with Real F1 Data Integration.
 
 This enhanced model uses real F1 performance data to improve the accuracy
 of race predictions and provide more realistic results.
+
+Updated for 2026 regulations with active aero and new power units.
 """
 
 import random
@@ -18,19 +20,28 @@ logger = logging.getLogger(__name__)
 class EnhancedRaceSimulator(RaceSimulator):
     """Enhanced race simulator that uses real F1 data for more accurate predictions."""
     
+    # Enhanced weighting for 2026 regulations
+    REAL_DATA_WEIGHT = 0.65  # How much to weight real data vs simulation
+    SIMULATION_WEIGHT = 0.35
+    
     def __init__(self, track, drivers, teams, weather, real_data_enhancer=None):
         super().__init__(track, drivers, teams, weather)
         self.real_data_enhancer = real_data_enhancer
         self.track_insights = {}
+        self._cached_driver_data = None
+        self._cached_team_data = None
         
         if real_data_enhancer:
             self.track_insights = real_data_enhancer.get_track_insights(track.name)
+            # Cache data for performance
+            self._cached_driver_data = real_data_enhancer.get_enhanced_driver_data()
+            self._cached_team_data = real_data_enhancer.get_enhanced_team_data()
             logger.info(f"Loaded track insights for {track.name}")
     
     def calculate_lap_time(self, driver, team, lap_number, weather, tire_degradation=0):
-        """Calculate lap time with enhanced real data consideration."""
+        """Calculate lap time with enhanced real data consideration for 2026."""
         # Start with the base calculation
-        base_time = super().calculate_lap_time(driver, team, lap_number, weather, tire_degradation)
+        base_time = self._calculate_race_pace(driver, team, lap_number, tire_degradation)
         
         # Apply real data adjustments if available
         if self.real_data_enhancer and self.track_insights.get('lap_times'):
@@ -40,28 +51,30 @@ class EnhancedRaceSimulator(RaceSimulator):
                 # Get real track lap time for this driver
                 real_lap_time = self.track_insights['lap_times'][driver_abbrev]
                 
-                # Blend real lap time with calculated time (70% real, 30% calculated)
-                adjusted_time = real_lap_time * 0.7 + base_time * 0.3
+                # Blend real lap time with calculated time using configurable weights
+                adjusted_time = (real_lap_time * self.REAL_DATA_WEIGHT + 
+                               base_time * self.SIMULATION_WEIGHT)
                 
-                # Add some variation to make it realistic
-                variation = np.random.normal(0, 0.5)  # ±0.5 second variation
+                # Add controlled variation to make it realistic
+                consistency = driver.consistency / 100.0 if hasattr(driver, 'consistency') else 0.8
+                variation = np.random.normal(0, 0.3 * (1 - consistency * 0.5))
                 final_time = adjusted_time + variation
                 
                 logger.debug(f"{driver.name}: Base={base_time:.3f}s, Real={real_lap_time:.3f}s, Final={final_time:.3f}s")
-                return max(final_time, base_time * 0.8)  # Don't make it too fast
+                return max(final_time, base_time * 0.85)  # Don't make it unrealistically fast
         
         return base_time
     
     def simulate_qualifying(self):
-        """Enhanced qualifying simulation with real data consideration."""
+        """Enhanced qualifying simulation with real data consideration for 2026."""
         print("🏎️ Running enhanced qualifying simulation...")
         
         # Get base qualifying results (list of drivers)
         grid_drivers = super().simulate_qualifying()
         
         # Apply real data insights for qualifying
-        if self.real_data_enhancer:
-            real_driver_data = self.real_data_enhancer.get_enhanced_driver_data()
+        if self.real_data_enhancer and self._cached_driver_data:
+            real_driver_data = self._cached_driver_data
             
             # Create qualifying results with times for adjustment
             qualifying_performances = []
@@ -69,25 +82,36 @@ class EnhancedRaceSimulator(RaceSimulator):
             for position, driver in enumerate(grid_drivers):
                 team = self.driver_teams[driver]
                 
-                # Calculate qualifying time (similar to base method)
-                base_time = 90 + (self.track.length_km - 5) * 5
-                driver_skill = driver.get_overall_rating()
-                driver_factor = 5 * (1 - (driver_skill / 100))
-                team_factor = 3 * (1 - (team.get_car_rating() / 100))
+                # Get qualifying-specific performance
+                if hasattr(driver, 'get_qualifying_rating'):
+                    driver_rating = driver.get_qualifying_rating()
+                else:
+                    driver_rating = driver.get_overall_rating()
+                
+                if hasattr(team, 'get_qualifying_pace'):
+                    team_rating = team.get_qualifying_pace()
+                else:
+                    team_rating = team.get_car_rating()
+                
+                # Calculate qualifying time
+                base_time = self.BASE_LAP_TIME + (self.track.length_km - 5) * 4.5
+                driver_factor = 4.0 * (1 - (driver_rating / 100))
+                team_factor = 3.0 * (1 - (team_rating / 100))
                 
                 # Weather and track conditions
                 weather_factor = 1.0
                 if self.weather.condition == "wet":
-                    weather_factor *= random.uniform(1.02, 1.15)
+                    wet_skill = driver.skill_wet / 100.0 if hasattr(driver, 'skill_wet') else 0.8
+                    weather_factor *= 1.0 + (0.12 * (1 - wet_skill))
                 elif self.weather.condition == "mixed":
-                    weather_factor *= random.uniform(1.0, 1.08)
+                    weather_factor *= random.uniform(1.0, 1.06)
                 
                 lap_time = (base_time + driver_factor + team_factor) * weather_factor
                 
-                # Add qualifying variation
-                q1_time = lap_time * random.uniform(1.001, 1.01)
-                q2_time = lap_time * random.uniform(0.995, 1.005)
-                q3_time = lap_time * random.uniform(0.99, 1.005)
+                # Add qualifying session improvement
+                q1_time = lap_time * random.uniform(1.002, 1.008)
+                q2_time = lap_time * random.uniform(0.997, 1.003)
+                q3_time = lap_time * random.uniform(0.994, 1.001)
                 best_time = min(q1_time, q2_time, q3_time)
                 
                 # Apply real data adjustments
@@ -97,15 +121,16 @@ class EnhancedRaceSimulator(RaceSimulator):
                     real_data = real_driver_data[driver_abbrev]
                     
                     # Apply performance adjustment based on real consistency
-                    consistency_factor = real_data['consistency'] / 100
+                    consistency_factor = real_data.get('consistency', 80) / 100
+                    qualifying_pace = real_data.get('qualifying_pace', 80) / 100 if 'qualifying_pace' in real_data else consistency_factor
                     
-                    # More consistent drivers perform more predictably in qualifying
-                    if consistency_factor > 0.85:  # Very consistent
-                        best_time *= random.uniform(0.995, 1.002)
-                    elif consistency_factor < 0.65:  # Less consistent
-                        best_time *= random.uniform(0.985, 1.015)
+                    # Better qualifiers perform more consistently
+                    if qualifying_pace > 0.88:
+                        best_time *= random.uniform(0.996, 1.001)
+                    elif qualifying_pace < 0.75:
+                        best_time *= random.uniform(0.998, 1.008)
                     
-                    logger.debug(f"Qualifying adjustment for {driver.name}: consistency={consistency_factor:.2f}")
+                    logger.debug(f"Qualifying adjustment for {driver.name}: pace={qualifying_pace:.2f}")
                 
                 qualifying_performances.append((driver, best_time))
             
@@ -120,7 +145,7 @@ class EnhancedRaceSimulator(RaceSimulator):
         return grid_drivers
     
     def simulate_race(self):
-        """Enhanced race simulation with real data insights."""
+        """Enhanced race simulation with real data insights for 2026."""
         print("🏁 Running enhanced race simulation...")
         
         # Get base race results
@@ -133,11 +158,16 @@ class EnhancedRaceSimulator(RaceSimulator):
         return results
     
     def _apply_real_data_race_adjustments(self, results: List[DriverRaceResult]) -> List[DriverRaceResult]:
-        """Apply race adjustments based on real F1 data."""
-        real_driver_data = self.real_data_enhancer.get_enhanced_driver_data()
-        real_team_data = self.real_data_enhancer.get_enhanced_team_data()
+        """Apply race adjustments based on real F1 data with optimized logic."""
+        real_driver_data = self._cached_driver_data or self.real_data_enhancer.get_enhanced_driver_data()
+        real_team_data = self._cached_team_data or self.real_data_enhancer.get_enhanced_team_data()
         
         logger.info("Applying real data race adjustments...")
+        
+        # Build team name lookup cache for efficiency
+        team_lookup = {}
+        for real_team_name in real_team_data.keys():
+            team_lookup[real_team_name.lower()] = real_team_name
         
         for result in results:
             driver_abbrev = self.real_data_enhancer._get_driver_abbreviation(result.driver.name)
@@ -147,57 +177,81 @@ class EnhancedRaceSimulator(RaceSimulator):
             if driver_abbrev in real_driver_data:
                 real_data = real_driver_data[driver_abbrev]
                 
-                # Adjust based on real overtaking ability
-                overtaking_skill = real_data['skill_overtaking']
-                if overtaking_skill > 85 and result.starting_position > result.finishing_position:
-                    # Strong overtakers might gain additional positions
-                    position_boost = random.choice([0, 0, 1]) if random.random() < 0.3 else 0
-                    result.finishing_position = max(1, result.finishing_position - position_boost)
+                # Adjust based on real overtaking ability and racecraft
+                overtaking_skill = real_data.get('skill_overtaking', 80)
+                racecraft = real_data.get('racecraft', 80) if 'racecraft' in real_data else overtaking_skill
                 
-                # Adjust based on real consistency
-                consistency = real_data['consistency']
-                if consistency < 70 and random.random() < 0.15:
-                    # Less consistent drivers more likely to have incidents
+                if overtaking_skill > 88 and result.starting_position > result.finishing_position:
+                    # Strong overtakers might gain additional positions
+                    if random.random() < 0.20:
+                        result.finishing_position = max(1, result.finishing_position - 1)
+                
+                # Tire management affects late race performance
+                tire_management = real_data.get('tire_management', 80) if 'tire_management' in real_data else 80
+                if tire_management > 88 and result.status == 'Finished':
+                    # Good tire managers might gain a position in final laps
+                    if random.random() < 0.12:
+                        result.finishing_position = max(1, result.finishing_position - 1)
+                
+                # Adjust based on real consistency (reduced incident probability)
+                consistency = real_data.get('consistency', 80)
+                if consistency > 88:
+                    # High consistency drivers have reduced incident chance
+                    if result.incident != RaceIncident.NONE and random.random() < 0.15:
+                        result.incident = RaceIncident.NONE
+                        result.incident_description = ""
+                        result.status = 'Finished'
+                elif consistency < 72 and random.random() < 0.08:
+                    # Less consistent drivers more likely to have issues
                     if result.incident == RaceIncident.NONE:
                         result.incident = random.choice([
                             RaceIncident.DRIVER_ERROR,
-                            RaceIncident.PUNCTURE,
-                            RaceIncident.PIT_ERROR
+                            RaceIncident.PUNCTURE
                         ])
-                        result.incident_description = "Real data suggests higher incident probability"
+                        result.incident_description = "Consistency issues led to incident"
             
             # Team-based adjustments  
             matching_team = None
-            for real_team_name in real_team_data.keys():
-                if team_name.lower() in real_team_name.lower() or real_team_name.lower() in team_name.lower():
-                    matching_team = real_team_name
+            team_name_lower = team_name.lower()
+            for key in team_lookup:
+                if team_name_lower in key or key in team_name_lower:
+                    matching_team = team_lookup[key]
                     break
             
             if matching_team and matching_team in real_team_data:
                 team_data = real_team_data[matching_team]
                 
-                # Reliability adjustments
-                reliability = team_data['reliability']
-                if reliability < 75 and random.random() < 0.1:
-                    # Lower reliability teams more likely to have mechanical issues
-                    if result.incident == RaceIncident.NONE and random.random() < 0.3:
-                        result.incident = RaceIncident.MECHANICAL_FAILURE
-                        result.incident_description = "Real data suggests reliability concerns"
+                # Reliability adjustments (2026: includes energy system)
+                reliability = team_data.get('reliability', 85)
+                energy_recovery = team_data.get('energy_recovery', 85) if 'energy_recovery' in team_data else 85
+                
+                # Combined reliability for 2026
+                combined_reliability = (reliability * 0.6 + energy_recovery * 0.4)
+                
+                if combined_reliability < 78 and random.random() < 0.06:
+                    if result.incident == RaceIncident.NONE and random.random() < 0.25:
+                        result.incident = random.choice([
+                            RaceIncident.MECHANICAL_FAILURE,
+                            RaceIncident.ENERGY_SYSTEM_FAILURE
+                        ])
+                        result.incident_description = "Reliability concerns led to technical issue"
                         result.status = "DNF"
                         result.finishing_position = len(results)
         
         # Re-sort results to account for adjustments
         finished_results = [r for r in results if r.status == 'Finished']
-        dnf_results = [r for r in results if r.status == 'DNF']
+        dnf_results = [r for r in results if r.status != 'Finished']
         
         # Re-assign positions for finished drivers
         finished_results.sort(key=lambda x: (x.finishing_position, x.time))
         for i, result in enumerate(finished_results):
             result.finishing_position = i + 1
+            result.positions_gained = result.starting_position - result.finishing_position
         
         # DNF drivers get positions after all finished drivers
         for i, result in enumerate(dnf_results):
             result.finishing_position = len(finished_results) + i + 1
+            result.positions_gained = result.starting_position - result.finishing_position
         
         all_results = finished_results + dnf_results
         
@@ -205,8 +259,8 @@ class EnhancedRaceSimulator(RaceSimulator):
         return all_results
     
     def calculate_weather_impact(self, driver, weather, base_time):
-        """Enhanced weather impact calculation using real data."""
-        # Start with base weather impact
+        """Enhanced weather impact calculation using real data for 2026."""
+        # Start with base weather impact from parent class
         weather_impact = super().calculate_weather_impact(driver, weather, base_time)
         
         # Apply real data weather insights if available
@@ -215,11 +269,12 @@ class EnhancedRaceSimulator(RaceSimulator):
             
             # If historical weather data shows this track tends to be rainy
             if weather_history.get('rain_probability', False) and weather.condition in ['wet', 'mixed']:
+                wet_skill = driver.skill_wet if hasattr(driver, 'skill_wet') else 80
                 # Drivers with high wet skill get even more advantage on historically wet tracks
-                if driver.skill_wet > 85:
-                    weather_impact *= 0.8  # Even better in wet conditions
-                elif driver.skill_wet < 70:
-                    weather_impact *= 1.15  # Even worse in wet conditions
+                if wet_skill > 88:
+                    weather_impact *= 0.85  # Even better in wet conditions
+                elif wet_skill < 72:
+                    weather_impact *= 1.12  # Even worse in wet conditions
         
         return weather_impact
     
@@ -228,18 +283,22 @@ class EnhancedRaceSimulator(RaceSimulator):
         metadata = {
             'enhanced_with_real_data': self.real_data_enhancer is not None,
             'track_insights_available': bool(self.track_insights),
-            'simulation_type': 'Enhanced with Real F1 Data'
+            'simulation_type': 'Enhanced with Real F1 Data (2026 Regulations)',
+            'real_data_weight': self.REAL_DATA_WEIGHT,
+            'simulation_weight': self.SIMULATION_WEIGHT
         }
         
         if self.real_data_enhancer:
-            real_driver_data = self.real_data_enhancer.get_enhanced_driver_data()
-            real_team_data = self.real_data_enhancer.get_enhanced_team_data()
+            real_driver_data = self._cached_driver_data or self.real_data_enhancer.get_enhanced_driver_data()
+            real_team_data = self._cached_team_data or self.real_data_enhancer.get_enhanced_team_data()
             
             metadata.update({
                 'drivers_with_real_data': len(real_driver_data),
                 'teams_with_real_data': len(real_team_data),
                 'track_lap_times_available': len(self.track_insights.get('lap_times', {}))
             })
+        
+        return metadata
         
         return metadata
 

@@ -67,6 +67,12 @@ Pipfile.lock
 # VS Code
 .vscode/
 
+# Virtual Environment
+venv/
+.venv/
+env/
+.env/
+
 # Fast-F1 cache
 data/cache/
 cache/

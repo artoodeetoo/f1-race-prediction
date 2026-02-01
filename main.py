@@ -49,19 +49,24 @@ from utils.loading_screen import show_data_loading_screen, suppress_fastf1_loggi
 def print_welcome():
     """Print welcome message with app information."""
     print("\n" + "=" * 80)
-    print("FORMULA 1 RACE PREDICTION SIMULATOR - 2025 SEASON")
+    print("FORMULA 1 RACE PREDICTION SIMULATOR - 2026 SEASON")
     print("=" * 80)
     print("This application simulates F1 race outcomes based on driver skills, car performance,")
     print("track characteristics, and variable weather conditions.")
-    print("\nAll data is fictional and represents a hypothetical 2025 F1 season.")
+    print("\n🏎️  2026 REGULATION CHANGES:")
+    print("  • New power units with 350kW MGU-K")
+    print("  • Active aerodynamics (X-Mode replaces DRS)")
+    print("  • 100% sustainable fuels")
+    print("  • Audi enters as factory team")
+    print("\nAll data is fictional and represents a hypothetical 2026 F1 season.")
     print("=" * 80 + "\n")
 
 
 def select_track():
-    """Prompt user to select a track from the 2025 calendar."""
+    """Prompt user to select a track from the 2026 calendar."""
     tracks = get_calendar()
     
-    print("\nAvailable races in the 2025 F1 Calendar:")
+    print("\nAvailable races in the 2026 F1 Calendar:")
     print("-" * 60)
     
     table_data = []
