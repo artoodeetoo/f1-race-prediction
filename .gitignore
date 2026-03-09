@@ -93,8 +93,15 @@ Thumbs.db
 *.out
 *.tmp
 
+# Development folders
+tests/
+demos/
+debug/
+
 # Misc
 *.bak
 *.swp
 *.swo
 
+#claude
+.claude/

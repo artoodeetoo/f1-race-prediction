@@ -11,9 +11,15 @@ This application simulates F1 race results based on:
 
 import os
 import sys
-import random
-import argparse
 from tabulate import tabulate as tabulate_func  # Import and rename for clarity
+
+# Load environment variables for API keys
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # Load .env file
+except ImportError:
+    # dotenv not installed, environment variables should be set manually
+    pass
 
 # Setup comprehensive Fast-F1 logging suppression before any other imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'utils'))
@@ -29,7 +35,7 @@ from data.real_data_integration import real_data_enhancer
 # Import our simulation models
 from models.race_model import RaceSimulator
 from models.enhanced_race_model import create_enhanced_simulator
-from models.weather import generate_weather
+from models.weather import generate_weather, get_race_weather
 from models.strategy import TireCompound, get_tire_strategy
 
 # Import visualization and stats utilities
@@ -93,32 +99,60 @@ def select_track():
 
 def select_weather_option(track):
     """Allow user to choose weather options."""
+    # Check if API key is available
+    has_api_key = bool(os.getenv('OPENWEATHER_API_KEY'))
+    
     print("\nChoose weather conditions for the race:")
-    print("1. Realistic (based on track location and season)")
-    print("2. Dry race")
-    print("3. Wet race")
-    print("4. Mixed conditions")
+    if has_api_key:
+        print("1. Real Weather Forecast (using OpenWeatherMap API)")
+        print("2. Realistic Simulation (based on track location and season)")
+        print("3. Dry race")
+        print("4. Wet race")
+        print("5. Mixed conditions")
+        max_option = 5
+    else:
+        print("ℹ️  Note: Set OPENWEATHER_API_KEY in .env for real weather forecasts")
+        print("1. Realistic (based on track location and season)")
+        print("2. Dry race")
+        print("3. Wet race")
+        print("4. Mixed conditions")
+        max_option = 4
     
     while True:
-        choice = input("\nSelect an option (1-4): ")
+        choice = input(f"\nSelect an option (1-{max_option}): ")
         
         # Strip any whitespace and check if it's a digit
         choice = choice.strip()
         if choice.isdigit():
             choice_num = int(choice)
             
-            if choice_num == 1:
-                return generate_weather(track)
-            elif choice_num == 2:
-                return generate_weather(track, forced_condition="dry")
-            elif choice_num == 3:
-                return generate_weather(track, forced_condition="wet")
-            elif choice_num == 4:
-                return generate_weather(track, forced_condition="mixed")
+            if has_api_key:
+                if choice_num == 1:
+                    print("🌤️  Fetching real weather forecast...")
+                    return get_race_weather(track, use_api=True)
+                elif choice_num == 2:
+                    return get_race_weather(track, use_api=False)
+                elif choice_num == 3:
+                    return get_race_weather(track, forced_condition="dry", use_api=False)
+                elif choice_num == 4:
+                    return get_race_weather(track, forced_condition="wet", use_api=False)
+                elif choice_num == 5:
+                    return get_race_weather(track, forced_condition="mixed", use_api=False)
+                else:
+                    print(f"Please enter a number between 1 and {max_option}")
             else:
-                print("Please enter a number between 1 and 4")
+                if choice_num == 1:
+                    return get_race_weather(track, use_api=False)
+                elif choice_num == 2:
+                    return get_race_weather(track, forced_condition="dry", use_api=False)
+                elif choice_num == 3:
+                    return get_race_weather(track, forced_condition="wet", use_api=False)
+                elif choice_num == 4:
+                    return get_race_weather(track, forced_condition="mixed", use_api=False)
+                else:
+                    print(f"Please enter a number between 1 and {max_option}")
         else:
-            print("Please enter a valid number (1-4)")
+            print("Please enter a valid number")
 
 
 def run_race_simulation(track, weather_option):
@@ -126,6 +160,10 @@ def run_race_simulation(track, weather_option):
     print("\n" + "=" * 60)
     print("🏎️  INTEGRATING REAL F1 DATA FOR ENHANCED PREDICTION")
     print("=" * 60)
+    
+    # Option to inject actual 2026 qualifying results
+    use_actual_qualifying = input("\n🏁 Use actual 2026 qualifying results if available? (y/n): ").lower().startswith('y')
+    actual_qualifying_used = False
     
     # Get all drivers and teams
     drivers = get_all_drivers()
@@ -183,12 +221,98 @@ def run_race_simulation(track, weather_option):
     weather = weather_option
     simulator = create_enhanced_simulator(track, enhanced_drivers, enhanced_teams, weather, real_data_enhancer)
     
-    # Simulate qualifying
-    print("\n🏎️ Simulating qualifying session...")
-    qualifying_results = simulator.simulate_qualifying()
+    # Handle qualifying (real or simulated)
+    if use_actual_qualifying:
+        try:
+            from models.simple_qualifying_injector import inject_qualifying_results
+            
+            # Try simple qualifying injection
+            injected_grid = inject_qualifying_results()
+            
+            if injected_grid:
+                simulator.grid_positions = injected_grid
+                qualifying_results = injected_grid
+                actual_qualifying_used = True
+                print("✅ Using actual 2026 qualifying results!")
+            else:
+                print("⏭️ Proceeding with simulated qualifying...")
+                qualifying_results = simulator.simulate_qualifying()
+        except Exception as e:
+            print(f"❌ Error with actual qualifying: {e}")
+            print("⏭️ Falling back to simulated qualifying...")
+            qualifying_results = simulator.simulate_qualifying()
+    else:
+        # Simulate qualifying
+        print("\n🏎️ Simulating qualifying session...")
+        qualifying_results = simulator.simulate_qualifying()
+    
+    # Optional: Grid adjustments (crashes, penalties, etc.)
+    grid_adjustments_made = False
+    try:
+        from models.grid_adjustments import GridAdjustmentManager
+        
+        adjust_grid = input("\n🔧 Make grid adjustments before race? (formation lap crash, penalties, etc.) (y/n): ").lower().startswith('y')
+        
+        if adjust_grid:
+            adjustment_manager = GridAdjustmentManager()
+            adjustment_manager.set_original_grid(qualifying_results)
+            
+            adjustments_applied = adjustment_manager.interactive_grid_adjustment()
+            
+            if adjustments_applied:
+                # Apply adjusted grid to simulator
+                final_grid = adjustment_manager.get_final_grid()
+                simulator.grid_positions = final_grid
+                qualifying_results = final_grid  # Update for display
+                grid_adjustments_made = True
+                
+                print(f"\n✅ Grid adjustments applied!")
+                print(f"📝 {adjustment_manager.get_adjustment_summary()}")
+                
+                removed_drivers = adjustment_manager.get_removed_drivers()
+                if removed_drivers:
+                    print(f"🚨 Drivers removed from race: {', '.join(removed_drivers)}")
+                    
+    except Exception as e:
+        print(f"❌ Grid adjustment error: {e}")
+        print("⏭️ Proceeding with original grid...")
+    
+    # Optional: Enhanced race start simulation
+    race_start_enhanced = False
+    try:
+        from models.race_start_predictor import enhance_race_with_start_simulation
+        
+        enhance_start = input("\n🏁 Use enhanced race start modeling? (analyzes driver-specific start performance) (y/n): ").lower().startswith('y')
+        
+        if enhance_start:
+            # Apply race start modeling
+            post_start_grid = enhance_race_with_start_simulation(simulator, qualifying_results, track)
+            race_start_enhanced = True
+            print("✅ Enhanced race start modeling applied!")
+            
+    except Exception as e:
+        print(f"❌ Race start enhancement error: {e}")
+        print("⏭️ Proceeding with standard race start...")
+    
+    # Optional: Advanced pit strategy modeling
+    strategy_enhanced = False
+    try:
+        from models.advanced_strategy_predictor import enhance_race_with_advanced_strategy
+        
+        enhance_strategy = input("\n🔧 Use advanced pit strategy modeling? (1-stop vs 2-stop analysis) (y/n): ").lower().startswith('y')
+        
+        if enhance_strategy:
+            # Apply advanced strategy modeling with optional overrides
+            strategies_applied = enhance_race_with_advanced_strategy(simulator, qualifying_results, track, weather)
+            strategy_enhanced = True
+            print("✅ Advanced pit strategy modeling applied!")
+            
+    except Exception as e:
+        print(f"❌ Strategy enhancement error: {e}")
+        print("⏭️ Proceeding with standard strategy modeling...")
     
     # Simulate race
-    print("🏁 Simulating race...")
+    print("\n🏁 Simulating race...")
     race_results = simulator.simulate_race()
     
     # Display results
@@ -201,10 +325,26 @@ def run_race_simulation(track, weather_option):
     print("📊 DATA SOURCE INFORMATION")
     print("=" * 60)
     print("This simulation combines:")
+    if actual_qualifying_used:
+        print("• ✅ ACTUAL 2026 qualifying results (web-scraped)")
+    else:
+        print("• 🎯 Simulated qualifying (form-based prediction)")
+    if grid_adjustments_made:
+        print("• 🔧 Pre-race grid adjustments applied")
+    if race_start_enhanced:
+        print("• 🏁 Enhanced race start performance modeling")
+    if strategy_enhanced:
+        print("• ⚙️ Advanced pit strategy analysis (1-stop vs 2-stop)")
     print("• Real F1 performance data (Fast-F1 API)")
     print("• Historical race statistics")
     print("• Advanced simulation algorithms")
     print("• Weather and track condition modeling")
+    if actual_qualifying_used:
+        print("\n🎯 ENHANCED ACCURACY: Using real 2026 qualifying data!")
+    if grid_adjustments_made:
+        print("⚠️  RACE CONDITIONS: Grid modified for real-world incidents")
+    if race_start_enhanced or strategy_enhanced:
+        print("🚀 ADVANCED MODELING: Enhanced race dynamics applied!")
     print("=" * 60)
     
     # Offer further analysis

@@ -21,6 +21,13 @@ try:
 except ImportError:
     ML_AVAILABLE = False
 
+# Import enhanced qualifying predictor
+try:
+    from models.qualifying_predictor import EnhancedQualifyingPredictor
+    QUALIFYING_PREDICTOR_AVAILABLE = True
+except ImportError:
+    QUALIFYING_PREDICTOR_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +48,7 @@ class EnhancedRaceSimulator(RaceSimulator):
         self.use_ml = use_ml and ML_AVAILABLE
         self.ml_predictor = None
         self.ml_predictions = None
+        self.qualifying_predictor = None
         
         if self.use_ml:
             try:
@@ -49,6 +57,15 @@ class EnhancedRaceSimulator(RaceSimulator):
             except Exception as e:
                 logger.warning(f"Could not initialize ML predictor: {e}")
                 self.use_ml = False
+        
+        # Initialize enhanced qualifying predictor
+        if QUALIFYING_PREDICTOR_AVAILABLE:
+            try:
+                self.qualifying_predictor = EnhancedQualifyingPredictor(real_data_enhancer)
+                logger.info("Enhanced qualifying predictor initialized")
+            except Exception as e:
+                logger.warning(f"Could not initialize qualifying predictor: {e}")
+                self.qualifying_predictor = None
         
         if real_data_enhancer:
             self.track_insights = real_data_enhancer.get_track_insights(track.name)
@@ -116,10 +133,14 @@ class EnhancedRaceSimulator(RaceSimulator):
         return base_time
     
     def simulate_qualifying(self):
-        """Enhanced qualifying simulation with real data consideration for 2026."""
+        """Enhanced qualifying simulation with form-based predictions for 2026."""
         print("🏎️ Running enhanced qualifying simulation...")
         
-        # Get base qualifying results (list of drivers)
+        # Use enhanced qualifying predictor if available
+        if self.qualifying_predictor:
+            return self._simulate_qualifying_with_form()
+        
+        # Fallback to original enhanced method
         grid_drivers = super().simulate_qualifying()
         
         # Apply real data insights for qualifying
@@ -193,6 +214,41 @@ class EnhancedRaceSimulator(RaceSimulator):
             return self.grid_positions
         
         return grid_drivers
+    
+    def _simulate_qualifying_with_form(self):
+        """Simulate qualifying using form-based predictions."""
+        qualifying_performances = []
+        
+        # Get qualifying form summary for analysis
+        if hasattr(self, 'drivers') and self.drivers:
+            form_summary = self.qualifying_predictor.get_form_summary(self.drivers)
+            logger.info(f"Qualifying form analysis: {len(form_summary['pole_contenders'])} pole contenders, "
+                       f"{len(form_summary['q3_certainties'])} Q3 certainties")
+        
+        # Predict qualifying position for each driver
+        for driver in self.drivers:
+            team = self.driver_teams.get(driver)
+            if not team:
+                continue
+                
+            # Get form-based prediction
+            predicted_time, predicted_pos = self.qualifying_predictor.predict_qualifying_position(
+                driver, team, self.track, self.weather
+            )
+            
+            qualifying_performances.append((driver, predicted_time))
+            
+            # Log interesting predictions
+            form = self.qualifying_predictor.calculate_qualifying_form(driver.name)
+            if abs(predicted_pos - form.avg_grid_position) > 2:
+                trend = "improving" if predicted_pos < form.avg_grid_position else "declining"
+                logger.info(f"{driver.name} predicted P{predicted_pos} (avg: P{form.avg_grid_position:.1f}) - {trend}")
+        
+        # Sort by lap time and set grid positions
+        qualifying_performances.sort(key=lambda x: x[1])
+        self.grid_positions = [driver for driver, _ in qualifying_performances]
+        
+        return self.grid_positions
     
     def simulate_race(self):
         """Enhanced race simulation with real data insights for 2026."""

@@ -297,10 +297,34 @@ class RealDataProvider:
             # Try to find the event for this track
             schedule = fastf1.get_event_schedule(year)
             
+            # Track name mappings for better matching
+            track_mappings = {
+                'albert park circuit': 'Australian Grand Prix',
+                'bahrain international circuit': 'Bahrain Grand Prix',
+                'jeddah corniche circuit': 'Saudi Arabian Grand Prix',
+                'shanghai international circuit': 'Chinese Grand Prix',
+                'suzuka circuit': 'Japanese Grand Prix',
+                'miami international autodrome': 'Miami Grand Prix',
+                'circuit de monaco': 'Monaco Grand Prix',
+                'circuit de barcelona-catalunya': 'Spanish Grand Prix',
+                'circuit gilles villeneuve': 'Canadian Grand Prix',
+                'silverstone circuit': 'British Grand Prix',
+                'red bull ring': 'Austrian Grand Prix',
+                'circuit de spa-francorchamps': 'Belgian Grand Prix',
+                'hungaroring': 'Hungarian Grand Prix',
+                'circuit zandvoort': 'Dutch Grand Prix',
+                'autodromo nazionale monza': 'Italian Grand Prix'
+            }
+            
             # Find matching event (flexible matching)
             matching_event = None
+            search_name = track_mappings.get(track_name.lower(), track_name)
+            
             for _, event in schedule.iterrows():
-                if track_name.lower() in event['EventName'].lower() or event['EventName'].lower() in track_name.lower():
+                event_name = event['EventName']
+                if (search_name.lower() in event_name.lower() or 
+                    event_name.lower() in search_name.lower() or
+                    track_name.lower() in event_name.lower()):
                     matching_event = event
                     break
             

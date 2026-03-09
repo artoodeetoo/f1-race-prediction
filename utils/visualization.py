@@ -16,7 +16,7 @@ init()
 def display_race_header(track, weather):
     """Display a styled header for race information."""
     print("\n" + "=" * 80)
-    print(f"{Fore.CYAN}2025 FORMULA 1 GRAND PRIX - {track.name.upper()}{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}2026 FORMULA 1 GRAND PRIX - {track.name.upper()}{Style.RESET_ALL}")
     print(f"Location: {track.city}, {track.country}")
     print(f"Track Length: {track.length_km}km - {track.laps} laps ({int(track.length_km * track.laps)}km)")
     print(f"Weather: {weather}")

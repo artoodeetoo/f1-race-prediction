@@ -51,11 +51,14 @@ This project is a **comprehensive Formula 1 race simulation system** that models
 
 ### Key Highlights
 
-- **Triple Hybrid Prediction**: Real F1 data (50%) + ML Models (25%) + Monte Carlo simulation (25%)
-- **2026 Regulation Compliance**: Full support for new power units (350kW MGU-K), active aerodynamics (X-Mode), and sustainable fuels
-- **11 Teams / 22 Drivers**: Complete 2026 grid including the new Cadillac F1 entry
-- **24 Race Calendar**: Official 2026 FIA Formula One World Championship schedule
-- **Real-Time Data Enhancement**: Live integration with Fast-F1 API for telemetry and timing data
+- **🎯 Maximum 2026 Accuracy**: Real qualifying results + Live weather + Grid adjustments ⭐NEW
+- **🌐 Web-Scraped Data**: Automatic 2026 qualifying from RacingNews365, Motorsport.com ⭐NEW  
+- **🔧 Pre-Race Realism**: Formation lap crashes, engine penalties, DNS scenarios ⭐NEW
+- **🌦️ Live Weather**: Real forecasts via OpenWeatherMap API for all 24 circuits ⭐NEW
+- **🤖 AI-Enhanced**: ML ensemble (Random Forest + Gradient Boosting + Neural Networks)
+- **📊 2026 Regulation Compliant**: Active aero (X-Mode), 350kW MGU-K, sustainable fuels
+- **🏁 Complete 2026 Grid**: 11 teams, 22 drivers including Audi and Cadillac entries
+- **📅 Full Season**: All 24 races of the 2026 FIA Formula One World Championship
 
 ---
 
@@ -70,13 +73,18 @@ This project is a **comprehensive Formula 1 race simulation system** that models
 | **Sustainable Fuel** | 100% sustainable fuel simulation in lap time calculations |
 | **Energy Management** | Track-specific `energy_demand` ratings affecting strategy |
 
-### 📊 Simulation Capabilities
+### 📊 Enhanced Simulation Capabilities
 
-- **Qualifying Simulation**: Q1/Q2/Q3 format with realistic time distributions
-- **Race Simulation**: Full race distance with lap-by-lap position tracking
-- **Strategy Engine**: Optimal pit window calculation with undercut/overcut modeling
-- **Incident System**: Mechanical failures, collisions, penalties, and energy system issues
-- **Weather Dynamics**: Location-based patterns with real-time condition changes
+- **Real Qualifying Integration**: Web-scraped 2026 qualifying results from racing websites ⭐NEW
+- **Advanced Grid Adjustments**: Formation lap crashes, penalties, DNS scenarios ⭐NEW  
+- **Enhanced Race Start Modeling**: Driver-specific first-lap performance analysis ⭐NEW
+- **Advanced Pit Strategy System**: 1-stop vs 2-stop with team execution modeling ⭐NEW
+- **Live Weather Integration**: Real forecasts via OpenWeatherMap API ⭐NEW
+- **Q1/Q2/Q3 Simulation**: Realistic qualifying progression with form-based predictions
+- **Full Race Distance**: Lap-by-lap tracking with real-time position changes
+- **Dynamic Strategy Engine**: Pit window optimization with undercut/overcut modeling
+- **Incident System**: Mechanical failures, collisions, penalties, energy system issues
+- **ML-Enhanced Predictions**: Ensemble of Random Forest, Gradient Boosting, Neural Networks
 
 ### 📈 Analytics & Visualization
 
@@ -588,66 +596,253 @@ pip install -r requirements.txt
 ### Dependencies
 
 ```
+# Core simulation
 numpy>=1.21.0
 pandas>=1.3.0
 matplotlib>=3.4.0
 seaborn>=0.11.0
+scikit-learn>=1.0.0
+
+# Real F1 data integration
 fastf1>=3.0.0
+
+# User interface  
 tabulate>=0.8.9
 colorama>=0.4.4
-requests>=2.26.0
+
+# API integrations (NEW!)
+requests>=2.25.0
+python-dotenv>=0.19.0
+beautifulsoup4>=4.9.0
+
+# Scientific computing
 scipy>=1.7.0
 ```
+
+### API Keys Setup (NEW!)
+
+#### OpenWeatherMap (Optional - for real weather)
+1. Get free API key from [OpenWeatherMap](https://openweathermap.org/api)
+2. Create `.env` file in project root:
+```bash
+OPENWEATHER_API_KEY=your_api_key_here
+USE_WEATHER_API=true
+```
+
+#### No API Key Required
+- FastF1 data (free)
+- Qualifying web scraping (free)  
+- All simulation features work without API keys
 
 ---
 
 ## 🎮 Usage
 
-### Basic Usage
+### Quick Start
 
 ```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Set up weather API (optional)
+# Add your OpenWeatherMap API key to .env file
+echo "OPENWEATHER_API_KEY=your_api_key_here" > .env
+
+# 3. Run the simulator
 python main.py
 ```
 
-### Interactive Menu
+### Enhanced Interactive Workflow
 
-1. Select race from 2026 calendar (1-24)
-2. Choose weather condition (Realistic/Dry/Wet/Mixed)
-3. View qualifying results
-4. Watch race simulation
-5. Analyze results with visualizations
+#### **Step 1: Race Selection**
+```
+🏎️ F1 2026 RACE CALENDAR
+1. Australian Grand Prix (Albert Park) - March 8
+2. Chinese Grand Prix (Shanghai) - March 15  
+3. Japanese Grand Prix (Suzuka) - March 29
+...
+Select race: 1
+```
 
-### Example Output
+#### **Step 2: Weather Configuration**
+```
+🌤️ Weather Options:
+1. Real Weather Forecast (OpenWeatherMap API) ← NEW!
+2. Realistic Simulation (location-based)
+3. Dry conditions
+4. Wet conditions  
+5. Mixed conditions
+Select: 1
+```
+
+#### **Step 3: Qualifying Data**
+```
+🏁 Qualifying Options:
+Use actual 2026 qualifying results? (y/n): y
+
+🔍 Searching for Albert Park Circuit qualifying results...
+✅ Found qualifying results on racingnews365.com
+📊 Top 3: P1-George Russell, P2-Kimi Antonelli, P3-Isack Hadjar
+✅ Using actual 2026 qualifying results!
+
+OR manual input:
+1. Enter full qualifying results (all 22 drivers)
+2. Enter top 10 only (Q3 results)
+Top 10: Russell, Antonelli, Hadjar, Verstappen...
+```
+
+#### **Step 4: Grid Adjustments (NEW!)**
+```
+🔧 Make grid adjustments before race? (y/n): y
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    GRID ADJUSTMENTS - Pre-Race Modifications    ║
+╠══════════════════════════════════════════════════════════════════╣
+║  1. Remove driver (formation lap crash/DNS)                     ║
+║  2. Apply position penalty (engine/gearbox)                     ║
+║  3. Move to back of grid                                         ║
+║  4. Move to pit lane start                                       ║
+║  5. Undo last adjustment                                         ║
+║  7. Finish adjustments                                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Example: Formation lap crash
+Select: 1
+Driver: Kimi Antonelli  
+Reason: Formation lap crash
+✅ Removed from race - grid now 21 drivers
+```
+
+#### **Step 5: Enhanced Race Start Modeling (NEW!)**
+```
+🏁 Use enhanced race start modeling? (y/n): y
+
+🔍 RACE START ANALYSIS:
+📈 Likely to gain positions: Charles Leclerc (P5), Lewis Hamilton (P6)
+📉 Likely to lose positions: Lance Stroll (P8)
+
+🏁 Simulating race start...
+  📈 Charles Leclerc: P5 → P3 (gained 2)
+  📈 Lewis Hamilton: P6 → P4 (gained 2)  
+  📉 Lance Stroll: P8 → P10 (lost 2)
+✅ Enhanced race start modeling applied!
+```
+
+#### **Step 6: Advanced Pit Strategy Analysis (NEW!)**
+```
+🔧 Use advanced pit strategy modeling? (y/n): y
+
+🔧 Analyzing pit strategy options...
+📊 19 drivers on 1-stop, 3 on 2-stop
+⚠️  Risky strategies: Max Verstappen, Charles Leclerc, Lando Norris
+
+🔧 Override pit strategies? (y/n): y
+1. Force specific team to 1-stop
+2. Force specific team to 2-stop
+3. Make Ferrari use poor strategy (realistic!)
+4. Make all teams conservative
+5. Keep current strategies
+
+Select: 3
+✅ Applied poor Ferrari strategy to 2 drivers
+✅ Advanced pit strategy modeling applied!
+```
+
+#### **Step 7: Race Simulation & Results**
+```
+🏁 Simulating race with enhanced data...
+📊 Using: Real weather + Actual qualifying + Grid adjustments
+```
+
+### Enhanced Output Example
 
 ```
 ================================================================================
 FORMULA 1 RACE PREDICTION SIMULATOR - 2026 SEASON
 ================================================================================
 
-🏎️  2026 REGULATION CHANGES:
-  • New power units with 350kW MGU-K
-  • Active aerodynamics (X-Mode replaces DRS)
-  • 100% sustainable fuels
-  • Audi enters as factory team, Cadillac joins as 11th team
+🌤️ WEATHER: Real forecast from OpenWeatherMap API
+Track: Albert Park Circuit, Melbourne  
+Conditions: Dry - 24°C, Humidity: 65%, Wind: 12km/h
 
-Select race: 1 (Australian GP)
-
-🏁 QUALIFYING RESULTS - Albert Park Circuit
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| Pos | Driver          | Team     | Time      |
-|-----|-----------------|----------|-----------|
-|  1  | Max Verstappen  | Red Bull | 1:18.234  |
-|  2  | Lando Norris    | McLaren  | 1:18.456  |
-|  3  | Charles Leclerc | Ferrari  | 1:18.512  |
+🏁 QUALIFYING RESULTS (ACTUAL 2026 DATA)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Pos | Driver            | Team        | Time     | Gap    |
+|-----|-------------------|-------------|----------|--------|
+|  1  | George Russell    | Mercedes    | 1:18.518 | POLE   |
+|  2  | Kimi Antonelli    | Mercedes    | 1:18.811 | +0.293 |
+|  3  | Isack Hadjar      | Red Bull    | 1:19.303 | +0.785 |
+|  4  | Max Verstappen    | Red Bull    | 1:19.445 | +0.927 |
+|  5  | Charles Leclerc   | Ferrari     | 1:19.567 | +1.049 |
 ...
+
+⚠️  GRID ADJUSTMENTS APPLIED:
+• Kimi Antonelli: Formation lap crash (DNS)
+• Max Verstappen: 5-place engine penalty (P4→P9)
+📊 Final grid: 21 drivers
 
 🏁 RACE RESULTS - Australian Grand Prix
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-| Pos | Driver          | Team     | Time/Status | Pts |
-|-----|-----------------|----------|-------------|-----|
-|  1  | Max Verstappen  | Red Bull | 1:28:34.567 | 25  |
-|  2  | Charles Leclerc | Ferrari  | +5.234s     | 18  |
-...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Pos | Driver          | Team     | Time/Status | Pts | Change |
+|-----|-----------------|----------|-------------|-----|--------|
+|  1  | George Russell  | Mercedes | 1:28:34.567 | 25  | (=)    |
+|  2  | Isack Hadjar    | Red Bull | +3.234s     | 18  | (+1)   |
+|  3  | Charles Leclerc | Ferrari  | +8.456s     | 15  | (+2)   |
+|  4  | Lewis Hamilton  | Ferrari  | +12.789s    | 12  | (+2)   |
+|  5  | Lando Norris    | McLaren  | +15.234s    | 10  | (+2)   |
+| ... | ...             | ...      | ...         | ... | ...    |
+|  9  | Max Verstappen  | Red Bull | +45.123s    | 2   | (-5)   |
+| DNS | Kimi Antonelli  | Mercedes | Crash       | 0   | DNS    |
+
+📊 DATA SOURCE INFORMATION
+════════════════════════════════════════════════════════════════
+• ✅ ACTUAL 2026 qualifying results (web-scraped)
+• 🔧 Pre-race grid adjustments applied  
+• 🏁 Enhanced race start performance modeling
+• ⚙️ Advanced pit strategy analysis (1-stop vs 2-stop)
+• 🌤️ Real weather forecast (OpenWeatherMap)
+• Real F1 performance data (Fast-F1 API)
+• Advanced simulation algorithms
+• Machine Learning ensemble prediction
+
+🎯 ENHANCED ACCURACY: Using real 2026 data + real-world incidents!
+⚠️  RACE CONDITIONS: Grid modified for formation lap crash & penalties
+🚀 ADVANCED MODELING: Enhanced race dynamics applied!
+════════════════════════════════════════════════════════════════
+```
+
+### New Features Showcase
+
+#### **🌐 Web-Scraped Qualifying Results**
+- Automatically fetches 2026 qualifying from racing websites
+- Supports RacingNews365, Motorsport.com, and more
+- Manual input fallback for any missing data
+- Saved results for quick reuse
+
+#### **🌦️ Real Weather Integration**  
+- Live forecasts from OpenWeatherMap API
+- Race-specific conditions (temperature, humidity, wind, rain)
+- Track-coordinate mapping for all 24 circuits
+- Fallback to realistic simulation if API unavailable
+
+#### **🔧 Advanced Grid Management**
+- Formation lap crash simulation (driver removal)
+- Engine/gearbox penalty applications  
+- Pit lane start scenarios
+- Multiple adjustments with undo capability
+- Real-time grid position updates
+
+#### **🏁 Enhanced Race Start Modeling**
+- Driver-specific start performance ratings (Leclerc 90%, Hamilton 85%)
+- First-lap position change simulation based on historical data
+- Track characteristics affecting race start dynamics
+- Realistic modeling of formation lap incidents and great/poor starts
+
+#### **⚙️ Advanced Pit Strategy System**
+- 1-stop vs 2-stop strategy decision modeling
+- Team-specific strategy execution ratings (Ferrari 60%, Red Bull 95%)
+- Track-based strategy optimization (tire degradation, overtaking difficulty)
+- Interactive strategy override system for "what-if" scenarios
 ```
 
 ---
@@ -673,7 +868,11 @@ f1-race-prediction/
 │   ├── race_model.py            # Core Monte Carlo engine
 │   ├── enhanced_race_model.py   # Real data enhancement
 │   ├── strategy.py              # Tire & pit modeling
-│   └── weather.py               # Weather generation
+│   ├── weather.py               # Weather generation
+│   ├── simple_qualifying_injector.py  # 2026 qualifying injection
+│   ├── grid_adjustments.py     # Pre-race modifications
+│   ├── race_start_predictor.py  # First-lap modeling (NEW)
+│   └── advanced_strategy_predictor.py  # Pit strategy system (NEW)
 │
 ├── utils/                       # Utilities
 │   ├── __init__.py
@@ -866,16 +1065,48 @@ v4.0 (Feb 2026)  → In development        → 2026 regulation modeling
 
 ---
 
+## 🆕 What's New in This Version
+
+### 🌐 Real 2026 Data Integration
+- **Automatic Web Scraping**: Fetches qualifying results from racing websites
+- **Manual Input Fallback**: Enter results when websites don't have data yet
+- **Saved Results**: Reuse previously entered qualifying data
+- **Smart Driver Matching**: Handles various name formats automatically
+
+### 🔧 Advanced Grid Management  
+- **Formation Lap Incidents**: Simulate crashes and technical failures
+- **Penalty Applications**: Engine, gearbox, and technical violations
+- **Pit Lane Starts**: Setup changes and major penalties
+- **Undo/Reset System**: Fix mistakes and try different scenarios
+
+### 🌦️ Live Weather Integration
+- **Real Forecasts**: OpenWeatherMap API for actual race day weather
+- **24 Circuit Coverage**: Coordinates for all 2026 F1 tracks  
+- **Intelligent Fallback**: Uses simulation when API unavailable
+- **Race-Specific Data**: Focused on race day conditions
+
+### 🎯 Enhanced Accuracy Features
+- **Form-Based Qualifying**: Uses recent driver performance patterns
+- **Championship Context**: Factors in points gaps and pressure  
+- **Track Specialists**: Models driver strengths at specific circuits
+- **Real-World Incidents**: Handles the unpredictable nature of F1
+
 ## 🗺️ Future Roadmap
 
-### Planned Features
+### Recently Completed ✅
+- [x] **Machine Learning Integration**: Ensemble of RF, GB, and NN models
+- [x] **Real Weather Integration**: OpenWeatherMap API integration  
+- [x] **Qualifying Data Injection**: Web scraping + manual input
+- [x] **Grid Adjustments**: Formation lap crashes, penalties, DNS
+- [x] **Enhanced Race Start Modeling**: Driver-specific first-lap performance
+- [x] **Advanced Pit Strategy System**: 1-stop vs 2-stop with team execution
 
-- [x] **Machine Learning Integration**: Ensemble of RF, GB, and NN models ✅
+### Upcoming Features
 - [ ] **Web Dashboard**: Flask/React frontend for visualization
 - [ ] **Historical Comparison**: Compare predictions vs actual results
 - [ ] **Championship Simulation**: Full season Monte Carlo
 - [ ] **Strategy Optimizer**: ML-based optimal pit strategy
-- [ ] **Live Race Integration**: Real-time prediction updates
+- [ ] **Live Race Integration**: Real-time prediction updates during races
 
 ### Technical Improvements
 
@@ -920,10 +1151,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*This simulator uses official F1 data via Fast-F1 API combined with Monte Carlo probabilistic methods and Machine Learning.*
+## 🚀 Get Started Now
+
+```bash
+# Quick setup
+git clone https://github.com/mehmetkahya0/f1-race-prediction.git
+cd f1-race-prediction
+pip install -r requirements.txt
+
+# Optional: Add weather API key
+echo "OPENWEATHER_API_KEY=your_key" > .env
+
+# Run with all new features
+python main.py
+```
+
+**Experience the most accurate 2026 F1 race predictions available!**
+
+---
+
+*This simulator combines official F1 data via Fast-F1 API, real weather forecasts, web-scraped qualifying results, and advanced Machine Learning for maximum accuracy.*
+
+*Enhanced with real-world incident simulation for the most realistic F1 race predictions.*
 
 *Not affiliated with Formula 1, FIA, or any F1 team.*
 
-**Built with ❤️ and ☕**
+**Built with ❤️, ☕, and the pursuit of perfect F1 predictions 🏁**
 
 </div>

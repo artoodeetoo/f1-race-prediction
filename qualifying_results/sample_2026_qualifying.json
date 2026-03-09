@@ -1,0 +1,40 @@
+{
+  "track_name": "Sample 2026 Race",
+  "race_date": "2026-03-09",
+  "qualifying_results": [
+    {
+      "position": 1,
+      "driver_name": "George Russell",
+      "team_name": "Mercedes",
+      "q1_time": null,
+      "q2_time": null,
+      "q3_time": null,
+      "best_time": "1:18.518",
+      "gap_to_pole": "POLE",
+      "session_type": "Q"
+    },
+    {
+      "position": 2,
+      "driver_name": "Kimi Antonelli",
+      "team_name": "Mercedes",
+      "q1_time": null,
+      "q2_time": null,
+      "q3_time": null,
+      "best_time": "1:18.811",
+      "gap_to_pole": "+0.293",
+      "session_type": "Q"
+    },
+    {
+      "position": 3,
+      "driver_name": "Isack Hadjar",
+      "team_name": "Red Bull",
+      "q1_time": null,
+      "q2_time": null,
+      "q3_time": null,
+      "best_time": "1:19.303",
+      "gap_to_pole": "+0.785",
+      "session_type": "Q"
+    }
+  ],
+  "updated_at": "2026-03-09T12:00:00"
+}
