@@ -161,8 +161,18 @@ def run_race_simulation(track, weather_option):
     print("🏎️  INTEGRATING REAL F1 DATA FOR ENHANCED PREDICTION")
     print("=" * 60)
     
-    # Option to inject actual 2026 qualifying results
-    use_actual_qualifying = input("\n🏁 Use actual 2026 qualifying results if available? (y/n): ").lower().startswith('y')
+    # Auto-detect sprint weekends — no prompt needed, fetch immediately
+    from models.simple_qualifying_injector import is_sprint_weekend
+    _is_sprint = is_sprint_weekend(track.name)
+
+    if _is_sprint:
+        print(f"\n🏁 Sprint weekend detected — auto-fetching Sprint Qualifying results...")
+        use_actual_qualifying = True
+        _auto_fetch = True
+    else:
+        use_actual_qualifying = input("\n🏁 Use actual 2026 qualifying results if available? (y/n): ").lower().startswith('y')
+        _auto_fetch = False
+
     actual_qualifying_used = False
     
     # Get all drivers and teams
@@ -225,9 +235,10 @@ def run_race_simulation(track, weather_option):
     if use_actual_qualifying:
         try:
             from models.simple_qualifying_injector import inject_qualifying_results
-            
-            # Try simple qualifying injection
-            injected_grid = inject_qualifying_results()
+
+            # Sprint weekends: silent auto-fetch (no menu stop)
+            # Conventional weekends: show the interactive menu
+            injected_grid = inject_qualifying_results(track_name=track.name, auto=_auto_fetch)
             
             if injected_grid:
                 simulator.grid_positions = injected_grid
