@@ -155,23 +155,72 @@ def select_weather_option(track):
             print("Please enter a valid number")
 
 
+def select_session_type(track):
+    """
+    For sprint weekends, ask whether to simulate the Sprint Race or the Full Race.
+    Returns a dict with keys:
+        'race_type'          : 'sprint' | 'full'
+        'qualifying_session' : 'Sprint Qualifying' | 'Qualifying'
+        'race_laps'          : int (overrides track.laps for sprint)
+        'label'              : human-readable label
+    """
+    import math
+    SPRINT_LAPS = math.ceil(100 / track.length_km)   # ~100 km sprint distance
+
+    print(f"\n🏁 SPRINT WEEKEND — {track.name}")
+    print("=" * 50)
+    print("This is a sprint weekend. Which session are you simulating?")
+    print(f"  1. Sprint Race  (~{SPRINT_LAPS} laps, grid set by Sprint Qualifying)")
+    print(f"  2. Full Race    ({track.laps} laps, grid set by Qualifying)")
+
+    while True:
+        choice = input("\nSelect (1 or 2): ").strip()
+        if choice == "1":
+            return {
+                "race_type": "sprint",
+                "qualifying_session": "Sprint Qualifying",
+                "race_laps": SPRINT_LAPS,
+                "label": "Sprint Race",
+            }
+        elif choice == "2":
+            return {
+                "race_type": "full",
+                "qualifying_session": "Qualifying",
+                "race_laps": track.laps,
+                "label": "Full Race",
+            }
+        else:
+            print("Please enter 1 or 2.")
+
+
 def run_race_simulation(track, weather_option):
     """Run the complete race simulation with real F1 data integration."""
     print("\n" + "=" * 60)
     print("🏎️  INTEGRATING REAL F1 DATA FOR ENHANCED PREDICTION")
     print("=" * 60)
-    
-    # Auto-detect sprint weekends — no prompt needed, fetch immediately
+
+    # ── Session type selection ────────────────────────────────────────────────
     from models.simple_qualifying_injector import is_sprint_weekend
     _is_sprint = is_sprint_weekend(track.name)
 
     if _is_sprint:
-        print(f"\n🏁 Sprint weekend detected — auto-fetching Sprint Qualifying results...")
-        use_actual_qualifying = True
+        session_info = select_session_type(track)
+        use_actual_qualifying = True   # always auto-fetch for sprint weekends
         _auto_fetch = True
+        _qualifying_session = session_info["qualifying_session"]
+        _race_laps = session_info["race_laps"]
+        _race_label = session_info["label"]
+        print(f"\n✅ Simulating: {_race_label} at {track.name}")
+        print(f"   Grid from: {_qualifying_session}  |  Laps: {_race_laps}")
     else:
-        use_actual_qualifying = input("\n🏁 Use actual 2026 qualifying results if available? (y/n): ").lower().startswith('y')
+        session_info = None
+        use_actual_qualifying = input(
+            "\n🏁 Use actual 2026 qualifying results if available? (y/n): "
+        ).lower().startswith('y')
         _auto_fetch = False
+        _qualifying_session = "Qualifying"
+        _race_laps = track.laps
+        _race_label = "Full Race"
 
     actual_qualifying_used = False
     
@@ -227,18 +276,32 @@ def run_race_simulation(track, weather_option):
         print("🎯 Proceeding with original simulation data...")
         enhanced_drivers, enhanced_teams = drivers, teams
     
-    # Create enhanced race simulator with real data
+    # Create enhanced race simulator with real data.
+    # For sprint races, override the track lap count so the simulation runs
+    # the correct distance (~19 laps) instead of the full race distance (56 laps).
     weather = weather_option
-    simulator = create_enhanced_simulator(track, enhanced_drivers, enhanced_teams, weather, real_data_enhancer)
-    
+    if _is_sprint and session_info and session_info["race_type"] == "sprint":
+        import copy
+        sprint_track = copy.copy(track)
+        sprint_track.laps = _race_laps
+        sim_track = sprint_track
+    else:
+        sim_track = track
+
+    simulator = create_enhanced_simulator(sim_track, enhanced_drivers, enhanced_teams, weather, real_data_enhancer)
+
     # Handle qualifying (real or simulated)
     if use_actual_qualifying:
         try:
             from models.simple_qualifying_injector import inject_qualifying_results
 
-            # Sprint weekends: silent auto-fetch (no menu stop)
+            # Sprint weekends: silent auto-fetch with the correct qualifying session
             # Conventional weekends: show the interactive menu
-            injected_grid = inject_qualifying_results(track_name=track.name, auto=_auto_fetch)
+            injected_grid = inject_qualifying_results(
+                track_name=track.name,
+                auto=_auto_fetch,
+                qualifying_session=_qualifying_session,
+            )
             
             if injected_grid:
                 simulator.grid_positions = injected_grid

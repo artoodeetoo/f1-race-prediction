@@ -197,12 +197,18 @@ class SimpleQualifyingInjector:
 
     # ── FastF1 auto-fetch ─────────────────────────────────────────────────────
 
-    def fetch_from_fastf1(self, track_name: str) -> Optional[List]:
+    def fetch_from_fastf1(
+        self, track_name: str, qualifying_session: str = "auto"
+    ) -> Optional[List]:
         """
         Try to fetch qualifying results from FastF1 for the given track.
 
-        Tries Sprint Qualifying first for sprint-weekend events, then falls
-        back to standard Qualifying.
+        Args:
+            track_name: Internal track name.
+            qualifying_session: Which qualifying session to load:
+                'Sprint Qualifying' — SQ session (grid for Sprint Race)
+                'Qualifying'        — full Q session (grid for Full Race)
+                'auto'              — auto-detect based on event format (default)
 
         Returns ordered list of driver objects, or None on failure.
         """
@@ -246,8 +252,13 @@ class SimpleQualifyingInjector:
             print(f"  ⚠️  No event mapping found for track: {track_name}")
             return None
 
-        # Determine session type for this event
-        session_type, human_label = _session_type_for_event(event_name)
+        # Determine which qualifying session to load
+        if qualifying_session == "auto":
+            session_type, human_label = _session_type_for_event(event_name)
+        else:
+            # Explicit override — use exactly what was requested
+            session_type = qualifying_session
+            human_label = qualifying_session
         print(f"  🔍 Fetching {human_label} results for {event_name} via FastF1...")
 
         session = _load_fastf1_session(event_name, session_type)
@@ -404,7 +415,11 @@ def is_sprint_weekend(track_name: str) -> bool:
     return False
 
 
-def inject_qualifying_results(track_name: str = "", auto: bool = False) -> Optional[List]:
+def inject_qualifying_results(
+    track_name: str = "",
+    auto: bool = False,
+    qualifying_session: str = "auto",
+) -> Optional[List]:
     """
     Main function called from main.py to inject qualifying results.
 
@@ -413,6 +428,10 @@ def inject_qualifying_results(track_name: str = "", auto: bool = False) -> Optio
                     Used for FastF1 auto-fetch.
         auto: If True, skip the interactive menu and silently auto-fetch from
               FastF1 (used for sprint-qualifying weekends where no stop is needed).
+        qualifying_session: Which qualifying session to fetch:
+            'Sprint Qualifying' — SQ session (grid for Sprint Race)
+            'Qualifying'        — full Q session (grid for Full Race)
+            'auto'              — auto-detect based on track format (default)
 
     Returns:
         Ordered list of driver objects representing the starting grid, or None.
@@ -423,7 +442,7 @@ def inject_qualifying_results(track_name: str = "", auto: bool = False) -> Optio
         # No menu, no prompt — just fetch and return
         if not track_name:
             return None
-        return injector.fetch_from_fastf1(track_name)
+        return injector.fetch_from_fastf1(track_name, qualifying_session=qualifying_session)
 
     print(f"\n🏁 QUALIFYING RESULTS INPUT")
     print(f"{'='*50}")
@@ -436,7 +455,7 @@ def inject_qualifying_results(track_name: str = "", auto: bool = False) -> Optio
     if choice == "1":
         if not track_name:
             track_name = input("Enter track name (e.g. 'Shanghai International Circuit'): ").strip()
-        return injector.fetch_from_fastf1(track_name)
+        return injector.fetch_from_fastf1(track_name, qualifying_session=qualifying_session)
 
     elif choice == "2":
         return injector.interactive_manual_input()
