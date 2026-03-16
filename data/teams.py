@@ -57,50 +57,62 @@ class Team:
 # - Sustainable fuels
 # - Audi officially joins as factory team (formerly Sauber)
 # - Cadillac enters F1 as the 11th team (GM/Andretti partnership)
+# Updated based on 2026 China GP actual results (Race 2, March 2026)
 TEAMS = {
-    "red_bull": Team("Red Bull Racing", "Red Bull", "Red Bull Ford", 
-                     94, 91, 95, 92, 95, 93,
-                     active_aero=94, energy_recovery=91, budget_cap_efficiency=90),
+    # Mercedes: #1 team — dominated S3/energy recovery, Antonelli P1, Russell P2
+    "red_bull": Team("Red Bull Racing", "Red Bull", "Red Bull Ford",
+                     85, 88, 93, 88, 87, 82,
+                     active_aero=85, energy_recovery=82, budget_cap_efficiency=88),
     
-    "ferrari": Team("Ferrari", "Ferrari", "Ferrari", 
-                    95, 89, 93, 93, 94, 96,
-                    active_aero=93, energy_recovery=94, budget_cap_efficiency=88),
+    # Ferrari: Strong #2 team — Hamilton P3, Leclerc P4
+    "ferrari": Team("Ferrari", "Ferrari", "Ferrari",
+                    94, 89, 93, 92, 93, 95,
+                    active_aero=92, energy_recovery=93, budget_cap_efficiency=88),
     
-    "mercedes": Team("Mercedes", "Mercedes", "Mercedes", 
-                     93, 93, 96, 94, 93, 94,
-                     active_aero=95, energy_recovery=96, budget_cap_efficiency=92),
+    # Mercedes: Upgraded to #1 — S3/energy dominance, 1-2 finish in China
+    "mercedes": Team("Mercedes", "Mercedes", "Mercedes",
+                     97, 93, 96, 94, 95, 97,
+                     active_aero=96, energy_recovery=98, budget_cap_efficiency=92),
     
-    "mclaren": Team("McLaren", "McLaren", "Mercedes", 
-                    96, 91, 94, 95, 96, 94,
-                    active_aero=96, energy_recovery=93, budget_cap_efficiency=94),
+    # McLaren: Strong #3 — Piastri P5, Norris P6, not quite matching Mercedes/Ferrari
+    "mclaren": Team("McLaren", "McLaren", "Mercedes",
+                    93, 91, 94, 94, 94, 94,
+                    active_aero=94, energy_recovery=92, budget_cap_efficiency=93),
     
-    "aston_martin": Team("Aston Martin", "Aston Martin", "Honda", 
-                         89, 88, 91, 90, 90, 92,
-                         active_aero=88, energy_recovery=90, budget_cap_efficiency=87),
+    # Aston Martin: Critical downgrade — P19/P21, Honda PU transition failed, 3+ sec off pace
+    "aston_martin": Team("Aston Martin", "Aston Martin", "Honda",
+                         76, 82, 88, 84, 78, 80,
+                         active_aero=76, energy_recovery=78, budget_cap_efficiency=83),
     
-    "alpine": Team("Alpine", "Alpine", "Renault", 
-                   84, 82, 87, 85, 85, 86,
-                   active_aero=84, energy_recovery=85, budget_cap_efficiency=83),
+    # Alpine: Upgraded — Gasly P7 consistently, Renault PU significantly improved
+    "alpine": Team("Alpine", "Alpine", "Renault",
+                   87, 83, 87, 86, 87, 88,
+                   active_aero=86, energy_recovery=87, budget_cap_efficiency=83),
     
-    "williams": Team("Williams", "Williams", "Mercedes", 
-                     86, 87, 88, 88, 86, 94,
-                     active_aero=85, energy_recovery=87, budget_cap_efficiency=89),
+    # Williams: Slight downgrade — Mercedes PU helps but chassis is weak, P17/P18
+    "williams": Team("Williams", "Williams", "Mercedes",
+                     83, 85, 87, 86, 83, 93,
+                     active_aero=82, energy_recovery=85, budget_cap_efficiency=87),
     
-    "racing_bulls": Team("Racing Bulls", "Racing Bulls", "Red Bull Ford", 
-                         83, 86, 86, 84, 84, 93,
-                         active_aero=82, energy_recovery=85, budget_cap_efficiency=82),
+    # Racing Bulls: Similar — Lawson/Lindblad P13-14 as expected
+    "racing_bulls": Team("Racing Bulls", "Racing Bulls", "Red Bull Ford",
+                         83, 86, 86, 84, 84, 82,
+                         active_aero=82, energy_recovery=82, budget_cap_efficiency=82),
     
-    "audi": Team("Audi", "Audi", "Audi", 
+    # Audi: Similar — Hulkenberg P11 is about right for lower-midfield
+    "audi": Team("Audi", "Audi", "Audi",
                  82, 80, 85, 88, 83, 85,
                  active_aero=86, energy_recovery=88, budget_cap_efficiency=90),
     
-    "haas": Team("Haas", "Haas", "Ferrari", 
-                 81, 82, 82, 81, 82, 96,
-                 active_aero=80, energy_recovery=81, budget_cap_efficiency=78),
+    # Haas: Upgraded — Bearman P9 shows genuine upper-midfield pace, Ferrari PU strong
+    "haas": Team("Haas", "Haas", "Ferrari",
+                 85, 83, 83, 82, 84, 96,
+                 active_aero=83, energy_recovery=84, budget_cap_efficiency=79),
     
-    "cadillac": Team("Cadillac", "Cadillac", "Cadillac", 
-                     78, 77, 80, 82, 79, 80,
-                     active_aero=77, energy_recovery=78, budget_cap_efficiency=85)
+    # Cadillac: Slight downgrade — Bottas/Perez clearly slowest, P20/P22
+    "cadillac": Team("Cadillac", "Cadillac", "Cadillac",
+                     75, 76, 79, 80, 77, 78,
+                     active_aero=74, energy_recovery=75, budget_cap_efficiency=83)
 }
 
 def get_team_by_name(name):

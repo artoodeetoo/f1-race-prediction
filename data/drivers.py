@@ -57,72 +57,92 @@ class Driver:
 # Data is based on 2026 season - new regulations era
 # Official lineup from formula1.com
 # Note: 2026 brings major regulation changes (new power units, active aero)
+# Updated based on 2026 China GP actual results (Race 2, March 2026)
 DRIVERS = {
-    # Red Bull Racing - Verstappen with rookie Hadjar
-    "verstappen": Driver("Max Verstappen", "Red Bull Racing", 1, "Dutch", 29, 12, 
-                         95, 97, 94, 93, 86, tire_management=91, racecraft=96, qualifying_pace=97),
-    "hadjar": Driver("Isack Hadjar", "Red Bull Racing", 6, "French", 21, 2, 
+    # Red Bull Racing - Verstappen P8 (car limited), Hadjar P10
+    # Verstappen: downgraded — P8, Ford PU limiting him, qualifying pace reduced
+    "verstappen": Driver("Max Verstappen", "Red Bull Racing", 1, "Dutch", 29, 12,
+                         95, 94, 94, 91, 86, tire_management=91, racecraft=96, qualifying_pace=92),
+    # Hadjar: similar — P10, decent for a rookie
+    "hadjar": Driver("Isack Hadjar", "Red Bull Racing", 6, "French", 21, 2,
                      83, 85, 82, 78, 81, tire_management=76, racecraft=80, qualifying_pace=86),
     
-    # Ferrari - Hamilton's second year with Leclerc
-    "leclerc": Driver("Charles Leclerc", "Ferrari", 16, "Monegasque", 29, 9, 
+    # Ferrari - Hamilton P3, Leclerc P4
+    # Leclerc: similar — P4, strong
+    "leclerc": Driver("Charles Leclerc", "Ferrari", 16, "Monegasque", 29, 9,
                       90, 92, 89, 86, 83, tire_management=87, racecraft=90, qualifying_pace=94),
-    "hamilton": Driver("Lewis Hamilton", "Ferrari", 44, "British", 41, 20, 
+    # Hamilton: similar — still very fast, P3 in the race
+    "hamilton": Driver("Lewis Hamilton", "Ferrari", 44, "British", 41, 20,
                        93, 94, 91, 90, 76, tire_management=95, racecraft=96, qualifying_pace=92),
     
-    # Mercedes - Russell leads with young Antonelli
-    "russell": Driver("George Russell", "Mercedes", 63, "British", 28, 7, 
-                      91, 93, 90, 89, 82, tire_management=88, racecraft=89, qualifying_pace=93),
-    "antonelli": Driver("Kimi Antonelli", "Mercedes", 12, "Italian", 20, 2, 
-                        88, 90, 86, 83, 84, tire_management=80, racecraft=85, qualifying_pace=91),
+    # Mercedes - Russell P2, Antonelli P1 (pole + race win)
+    # Russell: slight upgrade — consistently P2, very strong
+    "russell": Driver("George Russell", "Mercedes", 63, "British", 28, 7,
+                      91, 94, 90, 90, 82, tire_management=89, racecraft=90, qualifying_pace=94),
+    # Antonelli: major upgrade — fastest driver on grid, pole + race win
+    "antonelli": Driver("Kimi Antonelli", "Mercedes", 12, "Italian", 20, 2,
+                        88, 94, 88, 86, 85, tire_management=83, racecraft=88, qualifying_pace=95),
     
-    # McLaren - Defending champions
-    "norris": Driver("Lando Norris", "McLaren", 4, "British", 27, 8, 
-                     94, 96, 93, 94, 85, tire_management=90, racecraft=93, qualifying_pace=95),
-    "piastri": Driver("Oscar Piastri", "McLaren", 81, "Australian", 25, 4, 
+    # McLaren - Piastri P5, Norris P6
+    # Norris: slight qualifying downgrade — P6, not dominating like before
+    "norris": Driver("Lando Norris", "McLaren", 4, "British", 27, 8,
+                     94, 95, 93, 93, 85, tire_management=90, racecraft=93, qualifying_pace=93),
+    # Piastri: similar — P5, solid
+    "piastri": Driver("Oscar Piastri", "McLaren", 81, "Australian", 25, 4,
                       91, 93, 90, 91, 84, tire_management=89, racecraft=91, qualifying_pace=92),
     
-    # Aston Martin - Honda power unit partnership
-    "alonso": Driver("Fernando Alonso", "Aston Martin", 14, "Spanish", 45, 25, 
-                     92, 93, 90, 88, 87, tire_management=94, racecraft=95, qualifying_pace=89),
-    "stroll": Driver("Lance Stroll", "Aston Martin", 18, "Canadian", 28, 11, 
+    # Aston Martin - Alonso P19, Stroll P21 (car is terrible)
+    # Alonso: downgraded — P19, car terrible + aging factor
+    "alonso": Driver("Fernando Alonso", "Aston Martin", 14, "Spanish", 45, 25,
+                     90, 90, 88, 86, 85, tire_management=93, racecraft=94, qualifying_pace=86),
+    # Stroll: keep low — P21
+    "stroll": Driver("Lance Stroll", "Aston Martin", 18, "Canadian", 28, 11,
                      80, 82, 78, 77, 74, tire_management=76, racecraft=77, qualifying_pace=80),
     
-    # Alpine - Gasly with Colapinto
-    "gasly": Driver("Pierre Gasly", "Alpine", 10, "French", 30, 10, 
-                    84, 86, 84, 82, 80, tire_management=82, racecraft=84, qualifying_pace=86),
-    "colapinto": Driver("Franco Colapinto", "Alpine", 43, "Argentine", 22, 2, 
+    # Alpine - Gasly P7, Colapinto P12
+    # Gasly: upgraded — P7 consistently, outperforming his car
+    "gasly": Driver("Pierre Gasly", "Alpine", 10, "French", 30, 10,
+                    85, 88, 85, 84, 81, tire_management=84, racecraft=86, qualifying_pace=88),
+    # Colapinto: similar — P12
+    "colapinto": Driver("Franco Colapinto", "Alpine", 43, "Argentine", 22, 2,
                         80, 82, 79, 76, 78, tire_management=75, racecraft=78, qualifying_pace=83),
     
-    # Audi (formerly Sauber) - Factory Audi entry
-    "hulkenberg": Driver("Nico Hulkenberg", "Audi", 27, "German", 39, 14, 
+    # Audi (formerly Sauber) - Hulkenberg P11, Bortoleto P16
+    # Hulkenberg: similar — P11 is about right for lower-midfield
+    "hulkenberg": Driver("Nico Hulkenberg", "Audi", 27, "German", 39, 14,
                          84, 86, 83, 85, 78, tire_management=86, racecraft=84, qualifying_pace=84),
-    "bortoleto": Driver("Gabriel Bortoleto", "Audi", 5, "Brazilian", 22, 2, 
+    # Bortoleto: similar — P16
+    "bortoleto": Driver("Gabriel Bortoleto", "Audi", 5, "Brazilian", 22, 2,
                         80, 82, 79, 76, 77, tire_management=75, racecraft=78, qualifying_pace=83),
     
-    # Cadillac - New F1 team entry for 2026
-    "perez": Driver("Sergio Perez", "Cadillac", 11, "Mexican", 36, 16, 
-                    85, 87, 83, 82, 75, tire_management=88, racecraft=85, qualifying_pace=84),
-    "bottas": Driver("Valtteri Bottas", "Cadillac", 77, "Finnish", 37, 14, 
-                     84, 86, 80, 85, 72, tire_management=87, racecraft=82, qualifying_pace=86),
+    # Cadillac - Bottas P20, Perez P22
+    # Perez: downgraded — P22, clearly the slowest driver
+    "perez": Driver("Sergio Perez", "Cadillac", 11, "Mexican", 36, 16,
+                    83, 83, 81, 80, 74, tire_management=85, racecraft=82, qualifying_pace=80),
+    # Bottas: keep low — P20
+    "bottas": Driver("Valtteri Bottas", "Cadillac", 77, "Finnish", 37, 14,
+                     84, 85, 80, 84, 72, tire_management=86, racecraft=81, qualifying_pace=84),
     
-    # Racing Bulls (VCARB) - Red Bull junior team
-    "lawson": Driver("Liam Lawson", "Racing Bulls", 30, "New Zealander", 24, 3, 
+    # Racing Bulls (VCARB) - Lawson P13, Lindblad P14
+    # Lawson: similar — P13-14 as expected
+    "lawson": Driver("Liam Lawson", "Racing Bulls", 30, "New Zealander", 24, 3,
                      82, 84, 82, 80, 80, tire_management=78, racecraft=82, qualifying_pace=84),
-    "lindblad": Driver("Arvid Lindblad", "Racing Bulls", 17, "British", 18, 1, 
+    # Lindblad: similar — P13-14 as expected
+    "lindblad": Driver("Arvid Lindblad", "Racing Bulls", 17, "British", 18, 1,
                        79, 81, 78, 75, 80, tire_management=73, racecraft=77, qualifying_pace=82),
     
-    # Williams - Mercedes power
-    "sainz": Driver("Carlos Sainz", "Williams", 55, "Spanish", 32, 12, 
+    # Williams - Sainz P17, Albon P18
+    "sainz": Driver("Carlos Sainz", "Williams", 55, "Spanish", 32, 12,
                     89, 91, 88, 90, 79, tire_management=90, racecraft=89, qualifying_pace=90),
-    "albon": Driver("Alexander Albon", "Williams", 23, "Thai", 30, 8, 
+    "albon": Driver("Alexander Albon", "Williams", 23, "Thai", 30, 8,
                     85, 87, 83, 84, 78, tire_management=86, racecraft=85, qualifying_pace=85),
     
-    # Haas - Ferrari power
-    "ocon": Driver("Esteban Ocon", "Haas", 31, "French", 30, 10, 
+    # Haas - Bearman P9, Ocon P15
+    # Bearman: upgraded — P9, impressive for a young driver in a Haas
+    "ocon": Driver("Esteban Ocon", "Haas", 31, "French", 30, 10,
                    85, 86, 84, 83, 81, tire_management=82, racecraft=83, qualifying_pace=84),
-    "bearman": Driver("Oliver Bearman", "Haas", 87, "British", 21, 2, 
-                      82, 85, 82, 79, 83, tire_management=77, racecraft=80, qualifying_pace=84)
+    "bearman": Driver("Oliver Bearman", "Haas", 87, "British", 21, 2,
+                      83, 87, 83, 81, 84, tire_management=79, racecraft=82, qualifying_pace=86)
 }
 
 def get_driver_by_name(name):
